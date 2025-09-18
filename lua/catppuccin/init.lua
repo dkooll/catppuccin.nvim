@@ -1,4 +1,5 @@
 local theme = require('catppuccin.theme')
+local compiler = require('catppuccin.lib.compiler')
 
 local M = {}
 
@@ -130,8 +131,23 @@ function M.load(flavour)
   local resolved = resolve_flavour(flavour or M.options.flavour)
   M.flavour = resolved
 
-  local result_theme = theme.build(resolved, M.options, M.default_options.integrations)
+  local cached = compiler.load(resolved, M.options, M.default_options.integrations, M.path_sep)
+  local result_theme
+
+  if cached and cached.theme then
+    result_theme = cached.theme
+  else
+    local payload = compiler.compile(resolved, M.options, M.default_options.integrations, M.path_sep)
+    result_theme = payload.theme
+  end
+
   apply_highlights(result_theme, M.options, resolved)
+end
+
+function M.compile(flavour)
+  if not M.options then M.setup() end
+  local resolved = resolve_flavour(flavour or M.options.flavour)
+  return compiler.compile(resolved, M.options, M.default_options.integrations, M.path_sep)
 end
 
 return M
