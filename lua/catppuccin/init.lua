@@ -38,6 +38,7 @@ M.default_options = {
   integrations = {
     cmp = true,
     gitsigns = true,
+    lualine = true,
     neotree = true,
     indent_blankline = {
       enabled = true,
@@ -63,7 +64,7 @@ local function resolve_flavour(preferred)
   return M.options.background[background] or 'mocha'
 end
 
-local function apply_highlights(theme, opts, flavour)
+local function apply_highlights(compiled_theme, opts, flavour)
   vim.o.termguicolors = true
   if vim.g.colors_name then vim.cmd('hi clear') end
 
@@ -76,17 +77,17 @@ local function apply_highlights(theme, opts, flavour)
   vim.g.colors_name = 'catppuccin-' .. flavour
 
   if opts.term_colors then
-    for name, value in pairs(theme.terminal) do
+    for name, value in pairs(compiled_theme.terminal) do
       vim.g[name] = value
     end
   end
 
   local merged = vim.tbl_deep_extend(
     'keep',
-    vim.deepcopy(theme.custom_highlights),
-    theme.integrations,
-    theme.syntax,
-    theme.editor
+    vim.deepcopy(compiled_theme.custom_highlights),
+    compiled_theme.integrations,
+    compiled_theme.syntax,
+    compiled_theme.editor
   )
 
   for group, spec in pairs(merged) do
@@ -102,7 +103,7 @@ local function apply_highlights(theme, opts, flavour)
     if opts.no_bold then hl.bold = false end
     if opts.no_underline then hl.underline = false end
 
-    local custom = theme.custom_highlights[group]
+    local custom = compiled_theme.custom_highlights[group]
     if hl.link and custom and custom.link == nil then
       hl.link = nil
     end
