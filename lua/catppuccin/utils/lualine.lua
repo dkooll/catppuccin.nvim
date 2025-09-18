@@ -3,37 +3,39 @@ return function(flavour)
 	local O = require('catppuccin').options
 	local theme = {}
 
+	C.none = C.none or 'NONE'
 	local transparent_bg = O.transparent_background and C.none or C.mantle
+	local section_bg = O.transparent_background and C.none or C.surface0
 
 	theme.normal = {
 		a = { bg = C.blue, fg = C.mantle, gui = 'bold' },
-		b = { bg = C.surface0, fg = C.blue },
+		b = { bg = section_bg, fg = C.blue },
 		c = { bg = transparent_bg, fg = C.text },
 	}
 
 	theme.insert = {
 		a = { bg = C.green, fg = C.base, gui = 'bold' },
-		b = { bg = C.surface0, fg = C.green },
+		b = { bg = section_bg, fg = C.green },
 	}
 
 	theme.terminal = {
 		a = { bg = C.green, fg = C.base, gui = 'bold' },
-		b = { bg = C.surface0, fg = C.green },
+		b = { bg = section_bg, fg = C.green },
 	}
 
 	theme.command = {
 		a = { bg = C.peach, fg = C.base, gui = 'bold' },
-		b = { bg = C.surface0, fg = C.peach },
+		b = { bg = section_bg, fg = C.peach },
 	}
 
 	theme.visual = {
 		a = { bg = C.mauve, fg = C.base, gui = 'bold' },
-		b = { bg = C.surface0, fg = C.mauve },
+		b = { bg = section_bg, fg = C.mauve },
 	}
 
 	theme.replace = {
 		a = { bg = C.red, fg = C.base, gui = 'bold' },
-		b = { bg = C.surface0, fg = C.red },
+		b = { bg = section_bg, fg = C.red },
 	}
 
 	theme.inactive = {
