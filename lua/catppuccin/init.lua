@@ -38,6 +38,7 @@ M.default_options = {
   integrations = {
     cmp = true,
     gitsigns = true,
+    neotree = true,
     indent_blankline = {
       enabled = true,
       scope_color = '',
