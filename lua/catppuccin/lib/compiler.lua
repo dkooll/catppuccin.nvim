@@ -1,4 +1,5 @@
 local theme = require('catppuccin.theme')
+local highlights_lib = require('catppuccin.lib.highlights')
 
 local M = {}
 
@@ -36,9 +37,13 @@ end
 function M.compile(flavour, options, defaults, path_sep)
 	local opts_copy = vim.deepcopy(options)
 	local compiled_theme = select(1, theme.build(flavour, opts_copy, defaults))
+	local highlights = highlights_lib.prepare(compiled_theme, opts_copy)
+	local terminal = nil
+	if options.term_colors then terminal = vim.deepcopy(compiled_theme.terminal) end
 	local payload = {
 		hash = hash(options),
-		theme = compiled_theme,
+		highlights = highlights,
+		terminal = terminal,
 	}
 
 	local dir = options.compile_path
@@ -64,7 +69,7 @@ function M.load(flavour, options, defaults, path_sep)
 	local chunk = loadfile(file_path)
 	if not chunk then return end
 	local ok, result = pcall(chunk)
-	if not ok or type(result) ~= 'table' or not result.theme then return end
+	if not ok or type(result) ~= 'table' or not result.highlights then return end
 	local current_hash = hash(options)
 	if result.hash ~= current_hash then
 		return M.compile(flavour, options, defaults, path_sep)

@@ -1,5 +1,6 @@
 local theme = require('catppuccin.theme')
 local compiler = require('catppuccin.lib.compiler')
+local highlights_lib = require('catppuccin.lib.highlights')
 
 local M = {}
 
@@ -65,7 +66,7 @@ local function resolve_flavour(preferred)
   return M.options.background[background] or 'mocha'
 end
 
-local function apply_highlights(compiled_theme, opts, flavour)
+local function apply_prepared(highlights, terminal, opts, flavour)
   vim.o.termguicolors = true
   if vim.g.colors_name then vim.cmd('hi clear') end
 
@@ -77,40 +78,20 @@ local function apply_highlights(compiled_theme, opts, flavour)
 
   vim.g.colors_name = 'catppuccin-' .. flavour
 
-  if opts.term_colors then
-    for name, value in pairs(compiled_theme.terminal) do
+  if opts.term_colors and terminal then
+    for name, value in pairs(terminal) do
       vim.g[name] = value
     end
   end
 
-  local merged = vim.tbl_deep_extend(
-    'keep',
-    vim.deepcopy(compiled_theme.custom_highlights),
-    compiled_theme.integrations,
-    compiled_theme.syntax,
-    compiled_theme.editor
-  )
-
-  for group, spec in pairs(merged) do
-    local hl = vim.deepcopy(spec)
-    if type(hl.style) == 'table' then
-      for _, style in ipairs(hl.style) do
-        hl[style] = true
-      end
-      hl.style = nil
-    end
-
-    if opts.no_italic then hl.italic = false end
-    if opts.no_bold then hl.bold = false end
-    if opts.no_underline then hl.underline = false end
-
-    local custom = compiled_theme.custom_highlights[group]
-    if hl.link and custom and custom.link == nil then
-      hl.link = nil
-    end
-
-    vim.api.nvim_set_hl(0, group, hl)
+  for group, spec in pairs(highlights) do
+    vim.api.nvim_set_hl(0, group, spec)
   end
+end
+
+local function apply_highlights(compiled_theme, opts, flavour)
+  local highlights = highlights_lib.prepare(compiled_theme, opts)
+  apply_prepared(highlights, compiled_theme.terminal, opts, flavour)
 end
 
 function M.setup(user_conf)
@@ -132,16 +113,20 @@ function M.load(flavour)
   M.flavour = resolved
 
   local cached = compiler.load(resolved, M.options, M.default_options.integrations, M.path_sep)
-  local result_theme
 
-  if cached and cached.theme then
-    result_theme = cached.theme
-  else
-    local payload = compiler.compile(resolved, M.options, M.default_options.integrations, M.path_sep)
-    result_theme = payload.theme
+  if cached and cached.highlights then
+    apply_prepared(cached.highlights, cached.terminal, M.options, resolved)
+    return
   end
 
-  apply_highlights(result_theme, M.options, resolved)
+  local payload = compiler.compile(resolved, M.options, M.default_options.integrations, M.path_sep)
+  if payload.highlights then
+    apply_prepared(payload.highlights, payload.terminal, M.options, resolved)
+    return
+  end
+
+  local theme_result = select(1, theme.build(resolved, M.options, M.default_options.integrations))
+  apply_highlights(theme_result, M.options, resolved)
 end
 
 function M.compile(flavour)
